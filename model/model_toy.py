@@ -178,23 +178,14 @@ class GRNN(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
-        self.conv = nn.Sequential(nn.Conv3d(3, 16, (4, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),
-                                  nn.MaxPool3d((1, 2, 2), (1, 2, 2)), #32
-                                  nn.Conv3d(16, 32, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),
-                                  nn.MaxPool3d((1, 2, 2), (1, 2, 2)), #16
-                                  nn.Conv3d(32, 64, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),
-                                  nn.MaxPool3d((1, 2, 2), (1, 2, 2)), #8
-                                  nn.Conv3d(64, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),
-                                  nn.MaxPool3d((1, 2, 2), (1, 2, 2)), #4
-                                  nn.Conv3d(128, 1, (1, 4, 4), 1), nn.Sigmoid(),
-                                  # nn.MaxPool3d((1, 2, 2), (1, 2, 2)), #4
-                                  # nn.Conv3d(512, 1, (3, 4, 4), 1), nn.Sigmoid(),
-                                  # nn.Conv2d(32, 64, 3, 1, 1), nn.ReLU(), nn.MaxPool2d(2, 2),    #32
-                                  # nn.Conv2d(64, 128, 3, 1, 1), nn.ReLU(), nn.MaxPool2d(2, 2),   #16
-                                  # nn.Conv2d(128, 128, 3, 1, 1), nn.ReLU(), nn.MaxPool2d(2, 2),   #8
-                                  # nn.Conv2d(128, 256, 3, 1, 1), nn.ReLU(), nn.MaxPool2d(2, 2),  #4
-                                  # nn.Conv2d(256, 1, 4, 1), nn.Sigmoid()
-                                  )
+        self.conv = nn.Sequential(
+            nn.Conv3d(3, 16, (1, 1, 1), 1), nn.ReLU(),                                                          # 32
+            nn.Conv3d(16, 16, (4, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 32
+            nn.Conv3d(16, 32, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 16
+            nn.Conv3d(32, 64, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 8
+            nn.Conv3d(64, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)), # 4
+            nn.Conv3d(128, 1, (1, 4, 4), 1), nn.Sigmoid()
+        )
 
     def forward(self, x):
         out = self.conv(x)

@@ -32,8 +32,8 @@
             <file leaf-file-name="model_toy.py" pinned="false" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/model/model_toy.py">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="684">
-                    <caret line="290" column="54" lean-forward="false" selection-start-line="290" selection-start-column="54" selection-end-line="290" selection-end-column="54" />
+                  <state relative-caret-position="396">
+                    <caret line="181" column="19" lean-forward="true" selection-start-line="181" selection-start-column="19" selection-end-line="181" selection-end-column="19" />
                     <folding />
                   </state>
                 </provider>
@@ -110,8 +110,8 @@
         <option value="$PROJECT_DIR$/src/Config.py" />
         <option value="$PROJECT_DIR$/src/dataloader_toy.py" />
         <option value="$PROJECT_DIR$/toy_datagen.py" />
-        <option value="$PROJECT_DIR$/model/model_toy.py" />
         <option value="$PROJECT_DIR$/main_toy.py" />
+        <option value="$PROJECT_DIR$/model/model_toy.py" />
       </list>
     </option>
   </component>
@@ -918,8 +918,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model/model_toy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="684">
-          <caret line="290" column="54" lean-forward="false" selection-start-line="290" selection-start-column="54" selection-end-line="290" selection-end-column="54" />
+        <state relative-caret-position="396">
+          <caret line="181" column="19" lean-forward="true" selection-start-line="181" selection-start-column="19" selection-end-line="181" selection-end-column="19" />
           <folding />
         </state>
       </provider>
