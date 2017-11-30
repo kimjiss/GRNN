@@ -64,55 +64,50 @@ class Encoder(nn.Module):
         self.module5 = ModuleBlock(opt.ngf * 8, opt.ngf * 16)
         self.module6 = ModuleBlock(opt.ngf * 16, opt.ngf * 32)
     def forward(self, x):
-        x_1 = self.module1(x)
-        x_1 = self.pool(x_1)        # 32x32
-        x_2 = self.module2(x_1)
-        x_2 = self.pool(x_2)        # 16x16
-        x_3 = self.module3(x_2)
-        x_3 = self.pool(x_3)        # 8x8
-        x_4 = self.module4(x_3)
-        x_4 = self.pool(x_4)        # 4x4
-        x_5 = self.module5(x_4)
-        x_5 = self.pool(x_5)        # 2x2
-        x_ = self.module6(x_5)
-        x_ = self.pool(x_)  # 2x2
+        x = self.module1(x)
+        x = self.pool(x)        # 32x32
+        x = self.module2(x)
+        x = self.pool(x)        # 16x16
+        x = self.module3(x)
+        x = self.pool(x)        # 8x8
+        x = self.module4(x)
+        x = self.pool(x)        # 4x4
+        x = self.module5(x)
+        x = self.pool(x)        # 2x2
+        x = self.module6(x)
+        x = self.pool(x)  # 2x2
 
-        return x_, [x_1, x_2, x_3, x_4, x_5]
+        return x
 
 class Decoder(nn.Module):
     def __init__(self, opt):
         super(Decoder, self).__init__()
         self.unpool = nn.MaxUnpool2d(2, 2)
         self.deconv1 = nn.ConvTranspose2d(opt.ngf * 32, opt.ngf * 16, 2, 2)
-        self.module7 = ModuleBlock(opt.ngf * 32, opt.ngf * 16)
+        self.module7 = ModuleBlock(opt.ngf * 16, opt.ngf * 16)
         self.deconv2 = nn.ConvTranspose2d(opt.ngf * 16, opt.ngf * 8, 2, 2)
-        self.module8 = ModuleBlock(opt.ngf * 16, opt.ngf * 8)
+        self.module8 = ModuleBlock(opt.ngf * 8, opt.ngf * 8)
 
 
         self.deconv3 = nn.ConvTranspose2d(opt.ngf * 8, opt.ngf * 4, 2, 2)
-        self.module9 = ModuleBlock(opt.ngf * 8, opt.ngf * 4)
+        self.module9 = ModuleBlock(opt.ngf * 4, opt.ngf * 4)
         self.deconv4 = nn.ConvTranspose2d(opt.ngf * 4, opt.ngf * 2, 2, 2)
-        self.module10 = ModuleBlock(opt.ngf * 4, opt.ngf * 2)
+        self.module10 = ModuleBlock(opt.ngf * 2, opt.ngf * 2)
         self.deconv5 = nn.ConvTranspose2d(opt.ngf * 2, opt.ngf, 2, 2)
-        self.module11 = ModuleBlock(opt.ngf * 2, opt.ngf)
+        self.module11 = ModuleBlock(opt.ngf, opt.ngf)
         self.deconv6 = nn.ConvTranspose2d(opt.ngf, opt.ngf, 2, 2)
         self.module12 = ModuleBlock(opt.ngf, 3)
-    def forward(self, x, x_pack):
+    def forward(self, x):
         x_ = self.deconv1(x)
-        x_ = torch.cat([x_, x_pack[4]], dim=1)
         x_ = self.module7(x_)
         x_ = self.deconv2(x_)
-        x_ = torch.cat([x_, x_pack[3]], dim=1)
         x_ = self.module8(x_)
         x_ = self.deconv3(x_)
-        x_ = torch.cat([x_, x_pack[2]], dim=1)
         x_ = self.module9(x_)
 
         x_ = self.deconv4(x_)
-        x_ = torch.cat([x_, x_pack[1]], dim=1)
         x_ = self.module10(x_)
         x_ = self.deconv5(x_)
-        x_ = torch.cat([x_, x_pack[0]], dim=1)
         x_ = self.module11(x_)
 
         x_ = self.deconv6(x_)
@@ -128,12 +123,12 @@ class GRNNcell(nn.Module):
         self.fc_xh = nn.Linear(1024, 1024)
         self.decoder = Decoder(opt)
     def forward(self, x, hidden):
-        [out, pack] = self.encoder(x)
+        out = self.encoder(x)
         out = out.squeeze()
         # print self.fc_xh(out).size(), self.fc_hh(hidden).size()
         hidden = self.fc_xh(out) + self.fc_hh(hidden)
         hidden_ = hidden.unsqueeze(2).unsqueeze(3)
-        out = self.decoder(hidden_, pack)
+        out = self.decoder(hidden_)
         return out, hidden
 
 class GRNN(nn.Module):
@@ -142,6 +137,7 @@ class GRNN(nn.Module):
         self.opt = opt
         self.grnn_cell = GRNNcell(opt)
         self.train = True
+        self.fc = nn.Linear(100, 1024)
 
     def Train(self):
         self.train = True
@@ -150,6 +146,7 @@ class GRNN(nn.Module):
 
     def forward(self, x, hidden):
         out = []
+        hidden = self.fc(hidden)
         if self.train == True:
             for x_ in x:
                 [y, hidden] = self.grnn_cell(x_, hidden)
@@ -208,7 +205,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
     Dnet = Discriminator().cuda()
 
     optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr*0.7, betas=(opt.beta1, 0.999))
+    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
     Dcriterion = nn.BCELoss().cuda()
     fake = 0
     real = 1
@@ -231,7 +228,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
 
             # Fake
             input_g = [Variable(item.cuda()) for item in image]
-            init_hidden = torch.FloatTensor(image[0].size(0), 1024)
+            init_hidden = torch.FloatTensor(image[0].size(0), 100)
             init_hidden = Variable(init_hidden.random_(0, 1)).cuda()
             out = net(input_g[:-1], init_hidden)
 
@@ -278,7 +275,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
         net.Eval()
         for i, image in enumerate(test_dataloader):
             input = [Variable(item.cuda()) for item in image]
-            init_hidden = torch.FloatTensor(image[0].size(0), 1024)
+            init_hidden = torch.FloatTensor(image[0].size(0), 100)
             init_hidden = Variable(init_hidden.random_(0, 1)).cuda()
             out = net(input[0], init_hidden)
             out_video = [input_g[0]]

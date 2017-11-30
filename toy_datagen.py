@@ -37,4 +37,4 @@ def gen_video(datasize):
 			print '%d videos generated'%iter
 
 
-gen_video(10000)
+gen_video(30000)
