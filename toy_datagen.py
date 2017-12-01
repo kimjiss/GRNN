@@ -23,9 +23,9 @@ def gen_video(datasize):
 	file_num = 0
 	for iter in range(datasize):
 		color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-		shape = polygon_names[random.randint(0, 2)]
+		shape = polygon_names[iter % 3]
 		size = random.randint(3, 9)
-		dir = directions[random.randint(0, 7)]
+		dir = directions[iter % 8]
 		center = [32, 32]
 		for i in range(4):
 			img = draw_shape(center, size, shape, color)
@@ -37,4 +37,4 @@ def gen_video(datasize):
 			print '%d videos generated'%iter
 
 
-gen_video(30000)
+gen_video(50000)

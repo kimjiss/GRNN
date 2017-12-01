@@ -123,16 +123,16 @@ class GRNNcell(nn.Module):
     def __init__(self, opt):
         super(GRNNcell, self).__init__()
         self.encoder = Encoder(opt)
-        self.fc_hh = nn.Linear(opt.ngf * 32, opt.ngf * 32)
-        self.fc_xh = nn.Linear(opt.ngf * 32, opt.ngf * 32)
+        self.fc_h = nn.Linear(opt.ngf * 32 * 2, opt.ngf * 32)
         self.decoder = Decoder(opt)
     def forward(self, x, hidden):
         [out, pack] = self.encoder(x)
         out = out.squeeze()
         # print self.fc_xh(out).size(), self.fc_hh(hidden).size()
-        hidden = self.fc_xh(out) + self.fc_hh(hidden)
+        hidden = torch.cat([out, hidden], dim=1)
+        hidden = self.fc_h(hidden)
         hidden_ = hidden.unsqueeze(2).unsqueeze(3)
-        out = self.decoder(hidden_, pack)
+        out = self.decoder(hidden_, pack) + x
         return out, hidden
 
 class GRNN(nn.Module):
@@ -238,12 +238,12 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
 
     net = GRNN(opt).cuda()
     net.apply(weights_init)
-    Dnet = Discriminator().cuda()
+    # Dnet = Discriminator().cuda()
     IDnet = ImgDiscriminator().cuda()
 
-    optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.3, betas=(opt.beta1, 0.999))
-    optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.3, betas=(opt.beta1, 0.999))
+    optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    # optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.3, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.3, betas=(opt.beta1, 0.999), weight_decay=0.001)
     Dcriterion = nn.BCELoss().cuda()
     fake = 0
     real = 1
@@ -255,14 +255,14 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             # Train Discriminator #
             #######################
             # Real_sequence
-            Dnet.zero_grad()
+            # Dnet.zero_grad()
             IDnet.zero_grad()
-            input_real = [seq.unsqueeze(2) for seq in image]
-            input_real = Variable(torch.cat(input_real, dim=2).cuda())
-            label = Variable(torch.FloatTensor(input_real.size(0)).fill_(real)).cuda()
-            out = Dnet(input_real).squeeze()
-            errD_real_vid = Dcriterion(out, label)
-            errD_real_vid.backward(retain_graph=True)
+            # input_real = [seq.unsqueeze(2) for seq in image]
+            # input_real = Variable(torch.cat(input_real, dim=2).cuda())
+            # label = Variable(torch.FloatTensor(input_real.size(0)).fill_(real)).cuda()
+            # out = Dnet(input_real).squeeze()
+            # errD_real_vid = Dcriterion(out, label)
+            # errD_real_vid.backward(retain_graph=True)
 
             # Real_image
             input_real = [torch.cat([pre_img, post_img], dim=1) for pre_img, post_img in zip(image[:-1], image[1:])]
@@ -283,24 +283,27 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             input = [input_g[0].unsqueeze(2)]
             for item in out:
                 input.append(item.unsqueeze(2))
-            input__ = torch.cat(input, dim=2)
-            out_ = Dnet(input__).squeeze()
-            # print out_
-            D_g_1 = out_.data.mean()
-            label = Variable(torch.FloatTensor(out_.size(0)).fill_(fake)).cuda()
-            errD_fake_vid = Dcriterion(out_, label)
-            errD_fake_vid.backward(retain_graph=True)
+            # input__ = torch.cat(input, dim=2)
+            # out_ = Dnet(input__).squeeze()
+            # D_g_1 = out_.data.mean()
+            # label = Variable(torch.FloatTensor(out_.size(0)).fill_(fake)).cuda()
+            # errD_fake_vid = Dcriterion(out_, label)
+            # errD_fake_vid.backward(retain_graph=True)
 
             # Fake_image
-            input_ = [torch.cat([pre_img, post_img], dim=1) for pre_img, post_img in zip(input_g[:-1], out)]
+            pre_img_list = [input_g[0]]
+            for post_img in out[:-1]:
+                pre_img_list.append(post_img)
+            input_ = [torch.cat([pre_img, post_img], dim=1) for pre_img, post_img in zip(pre_img_list, out)]
             input_ = torch.cat(input_, dim=0)
             label = Variable(torch.FloatTensor(input_.size(0)).fill_(fake)).cuda()
             out_ = IDnet(input_)
+            D_g_1 = out_.data.mean()
             errD_fake_img = Dcriterion(out_, label)
             errD_fake_img.backward(retain_graph=True)
 
-            errD = errD_real_vid + errD_real_img + errD_fake_vid + errD_fake_img
-            optimizerD.step()
+            errD = errD_real_img + errD_fake_img
+            # optimizerD.step()
             optimizerID.step()
 
             ###################
@@ -308,19 +311,20 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             ###################
             # Fake_sequence
             net.zero_grad()
-            out_ = Dnet(input__).squeeze()
-            D_g_2 = out_.data.mean()
-            label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
-            errG_vid = Dcriterion(out_, label)
-            errG_vid.backward(retain_graph=True)
+            # out_ = Dnet(input__).squeeze()
+            # D_g_2 = out_.data.mean()
+            # label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
+            # errG_vid = Dcriterion(out_, label)
+            # errG_vid.backward(retain_graph=True)
 
             # Fake_image
             out_ = IDnet(input_)
+            D_g_2 = out_.data.mean()
             label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
             errG_img = Dcriterion(out_, label)
             errG_img.backward()
 
-            errG = errG_vid + errG_img
+            errG = errG_img
             optimizer.step()
 
 
