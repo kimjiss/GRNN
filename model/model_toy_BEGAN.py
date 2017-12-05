@@ -175,12 +175,18 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.conv = nn.Sequential(
+            # encoding
             nn.Conv3d(3, 32, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),                                       # 32
             nn.Conv3d(32, 64, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 32
             nn.Conv3d(64, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 16
             nn.Conv3d(128, 256, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 8
             nn.Conv3d(256, 256, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)), # 4
-            nn.Conv3d(256, 512, (1, 4, 4), 1), nn.ReLU()
+            nn.Conv3d(256, 512, (1, 4, 4), 1), nn.ReLU(),
+            # FC
+            nn.Conv3d(512, 1024, (1, 1, 1), 1), nn.ReLU(),
+            nn.Conv3d(1024, 512, (1, 1, 1), 1), nn.ReLU(),
+            # decoding
+	        nn.ConvTranspose3d(512, 256)
         )
         self.fc = nn.Sequential(
             nn.Linear(512, 1), nn.Sigmoid()

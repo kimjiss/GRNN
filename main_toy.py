@@ -2,7 +2,7 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 
 # from model.model_L1lossOnly import GRNN_trainer
-from model.model_toy import GRNN_trainer
+from model.model_toy_GAN import GRNN_trainer
 from src.dataloader_toy import Polygons
 import argparse
 
@@ -24,10 +24,10 @@ def parse_opt():
 
     # Model option
     parser.add_argument('--npf', type=int, default=32)
-    parser.add_argument('--ngf', type=int, default=32)
+    parser.add_argument('--ngf', type=int, default=64)
     parser.add_argument('--ndf', type=int, default=64)
     parser.add_argument('--nz', type=int, default=100)
-    parser.add_argument('--lr', type=float, default=0.00001)
+    parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--lb', type=float, default=0.0)
     parser.add_argument('--beta1', type=float, default=0.5)
 
