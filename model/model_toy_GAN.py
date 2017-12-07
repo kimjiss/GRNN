@@ -1,10 +1,29 @@
 import torch
-from torch.autograd import Variable
+from torch.autograd import Variable, grad
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.utils as vutils
 import os
 
+def calc_gradient_penalty(netD, real_data, fake_data, wlambda):
+    alpha = torch.rand(real_data.size(0), 1, 1, 1, 1)
+    # print alpha.size(), real_data.size()
+    alpha = alpha.expand(real_data.size())
+    alpha = alpha.cuda()
+
+    interpolates = alpha * real_data + ((1 - alpha) * fake_data)
+
+    interpolates = interpolates.cuda()
+    interpolates = Variable(interpolates, requires_grad=True)
+    print interpolates.size()
+    disc_interpolates = netD(interpolates)
+
+    gradients = grad(outputs=disc_interpolates, inputs=interpolates,
+                     grad_outputs=torch.ones(disc_interpolates.size()).cuda(),
+                     create_graph=True, retain_graph=True, only_inputs=True)[0]
+    gradient_penalty = ((gradients.view(gradients.size(0), -1).norm(2, dim=1) - 1) ** 2).mean() * wlambda
+    print gradients.view(gradients.size(0), -1).size()
+    return gradient_penalty
 
 class Resblock(nn.Module):
     def __init__(self, indepth, outdepth, stride=1):
@@ -183,7 +202,7 @@ class Discriminator(nn.Module):
             nn.Conv3d(256, 512, (1, 4, 4), 1), nn.ReLU()
         )
         self.fc = nn.Sequential(
-            nn.Linear(512, 1), nn.Sigmoid()
+            nn.Linear(512, 1)
         )
 
     def forward(self, x):
@@ -211,8 +230,8 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
     optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
     optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.7, betas=(opt.beta1, 0.999), weight_decay=0.001)
     Dcriterion = nn.BCELoss().cuda()
-    fake = 0
-    real = 1
+    one = torch.FloatTensor([1])
+    mone = one * -1
 
     for epoch in range(opt.niter):
         net.Train()
@@ -225,10 +244,12 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             # IDnet.zero_grad()
             input_real = [seq.unsqueeze(2) for seq in image]
             input_real = Variable(torch.cat(input_real, dim=2).cuda())
-            label = Variable(torch.FloatTensor(input_real.size(0)).fill_(real)).cuda()
+            # label = Variable(torch.FloatTensor(input_real.size(0)).fill_(real)).cuda()
             out = Dnet(input_real).squeeze()
-            errD_real_vid = Dcriterion(out, label)
-            errD_real_vid.backward(retain_graph=True)
+            # errD_real_vid = Dcriterion(out, label)
+            errD_real_vid = - out.mean()
+            print out.size()
+            errD_real_vid.backward()
 
             D_x = out.data.mean()
 
@@ -245,10 +266,13 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             input__ = torch.cat(input, dim=2)
             out_ = Dnet(input__)
             D_g_1 = out_.data.mean()
-            label = Variable(torch.FloatTensor(out_.size(0)).fill_(fake)).cuda()
-            errD_fake_vid = Dcriterion(out_, label)
-            errD_fake_vid.backward(retain_graph=True)
+            # label = Variable(torch.FloatTensor(out_.size(0)).fill_(fake)).cuda()
+            # errD_fake_vid = Dcriterion(out_, label)
+            errD_fake_vid = out_.mean()
+            errD_fake_vid.backward()
 
+            gradient_penalty = calc_gradient_penalty(Dnet, input_real.data, input__.data, 10)
+            gradient_penalty.backward()
             errD = errD_real_vid + errD_fake_vid
             optimizerD.step()
 
@@ -259,9 +283,10 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             net.zero_grad()
             out_ = Dnet(input__).squeeze()
             D_g_2 = out_.data.mean()
-            label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
-            errG_vid = Dcriterion(out_, label)
-            errG_vid.backward(retain_graph=True)
+            # label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
+            # errG_vid = Dcriterion(out_, label)
+            errG_vid = - out_.mean()
+            errG_vid.backward()
 
             errG = errG_vid
             optimizer.step()
