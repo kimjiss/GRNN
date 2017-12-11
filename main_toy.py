@@ -14,7 +14,7 @@ def parse_opt():
     parser.add_argument('--train_subjectlist', type=list, default=[1])  # [1, 5, 6, 7, 8, 9])
     parser.add_argument('--test_subjectlist', type=list, default=[5])
     parser.add_argument('--actionlist', type=list, default=['Walking'])
-    parser.add_argument('--batchsize', type=int, default=12)
+    parser.add_argument('--batchsize', type=int, default=32)
     parser.add_argument('--workers', type=int, default=4)
     parser.add_argument('--outf', default='./results')
     parser.add_argument('--heatpointsize', type=int, default=9)

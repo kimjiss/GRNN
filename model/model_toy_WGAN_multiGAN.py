@@ -172,15 +172,15 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv3d(3, 16, (1, 1, 1), 1), nn.ReLU(),                                                          # 32
-            nn.Conv3d(16, 16, (4, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 32
-            nn.Conv3d(16, 32, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 16
-            nn.Conv3d(32, 64, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 8
-            nn.Conv3d(64, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)), # 4
-            nn.Conv3d(128, 256, (1, 4, 4), 1), nn.ReLU()
+            nn.Conv3d(3, 32, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),  # 32
+            nn.Conv3d(32, 64, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 32
+            nn.Conv3d(64, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 16
+            nn.Conv3d(128, 256, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 8
+            nn.Conv3d(256, 256, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 4
+            nn.Conv3d(256, 512, (1, 4, 4), 1), nn.ReLU()
         )
         self.fc = nn.Sequential(
-            nn.Linear(256, 1), nn.Sigmoid()
+            nn.Linear(512, 1), nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -234,8 +234,8 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
     IDnet = ImgDiscriminator().cuda()
 
     optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
-    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.1, betas=(opt.beta1, 0.999), weight_decay=0.001)
-    optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.1, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.45, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.15, betas=(opt.beta1, 0.999), weight_decay=0.001)
     Dcriterion = nn.BCELoss().cuda()
     fake = 0
     real = 1
@@ -323,7 +323,8 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             ###################
             # Fake_sequence
             net.zero_grad()
-            # out_ = Dnet(input__).squeeze()
+            errG_out_vid = Dnet(input__).squeeze()
+            errG_fake_vid = - errG_out_vid.mean()
             # D_g_2 = out_.data.mean()
             # label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
             # errG_vid = Dcriterion(out_, label)
@@ -335,9 +336,9 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             # label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
             # errG_img = Dcriterion(out_, label)
             errG_img = -out_.mean()
-            errG_img.backward()
+            errG = errG_fake_vid + errG_img
+            errG.backward()
 
-            errG = errG_img
             optimizer.step()
 
 

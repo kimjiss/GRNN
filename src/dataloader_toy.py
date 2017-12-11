@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 def video_loader(path):
-	transform = transforms.ToTensor()
+	transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0, 0, 0), (1, 1, 1))])
 	img_pack = []
 	for i in range(4):
 		frame_num = str(int(path.split('/')[-1][:-4]) + i)

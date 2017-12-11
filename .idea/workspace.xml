@@ -2,12 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="97c401fd-7ef6-4fa7-ab11-4b176d2d27a6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model/model_toy_WGAN_MI.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main_toy.py" afterPath="$PROJECT_DIR$/main_toy.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/model_toy_GAN.py" afterPath="$PROJECT_DIR$/model/model_toy_GAN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py" afterPath="$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/dataloader_toy.py" afterPath="$PROJECT_DIR$/src/dataloader_toy.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -25,7 +23,7 @@
       <file leaf-file-name="model.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3186">
+            <state relative-caret-position="0">
               <caret line="182" column="12" lean-forward="false" selection-start-line="182" selection-start-column="12" selection-end-line="182" selection-end-column="12" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
@@ -37,46 +35,10 @@
       <file leaf-file-name="main_toy.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main_toy.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="522">
-              <caret line="29" column="59" lean-forward="false" selection-start-line="29" selection-start-column="59" selection-end-line="29" selection-end-column="59" />
+            <state relative-caret-position="288">
+              <caret line="16" column="59" lean-forward="false" selection-start-line="16" selection-start-column="59" selection-end-line="16" selection-end-column="59" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="model_toy_GAN.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model/model_toy_GAN.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1854">
-              <caret line="121" column="0" lean-forward="false" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
-              <folding>
-                <element signature="e#0#12#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="model_toy_WGAN_multiGAN.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="249">
-              <caret line="328" column="48" lean-forward="true" selection-start-line="328" selection-start-column="48" selection-end-line="328" selection-end-column="48" />
-              <folding>
-                <element signature="e#0#12#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="model_toy_WGAN_MI.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model/model_toy_WGAN_MI.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2970">
-              <caret line="243" column="27" lean-forward="false" selection-start-line="243" selection-start-column="27" selection-end-line="243" selection-end-column="27" />
-              <folding>
-                <element signature="e#0#12#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -85,8 +47,8 @@
       <file leaf-file-name="model_toy.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/model_toy.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4140">
-              <caret line="235" column="34" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="376" selection-end-column="0" />
+            <state relative-caret-position="532">
+              <caret line="125" column="61" lean-forward="false" selection-start-line="125" selection-start-column="61" selection-end-line="125" selection-end-column="61" />
               <folding />
             </state>
           </provider>
@@ -95,9 +57,21 @@
       <file leaf-file-name="dataloader_toy.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/dataloader_toy.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="39" column="40" lean-forward="false" selection-start-line="39" selection-start-column="40" selection-end-line="39" selection-end-column="40" />
+            <state relative-caret-position="54">
+              <caret line="8" column="99" lean-forward="false" selection-start-line="8" selection-start-column="99" selection-end-line="8" selection-end-column="99" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="model_toy_WGAN_multiGAN.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="195">
+              <caret line="244" column="34" lean-forward="false" selection-start-line="244" selection-start-column="34" selection-end-line="244" selection-end-column="34" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -165,15 +139,15 @@
         <option value="$PROJECT_DIR$/src/dataloader_posemodified.py" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/src/Config.py" />
-        <option value="$PROJECT_DIR$/src/dataloader_toy.py" />
         <option value="$PROJECT_DIR$/model/model_vector.py" />
         <option value="$PROJECT_DIR$/toy_datagen.py" />
         <option value="$PROJECT_DIR$/model/model_toy.py" />
         <option value="$PROJECT_DIR$/model/model_toy_BEGAN.py" />
         <option value="$PROJECT_DIR$/model/model_toy_WGAN_MI.py" />
         <option value="$PROJECT_DIR$/model/model_toy_GAN.py" />
-        <option value="$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py" />
+        <option value="$PROJECT_DIR$/src/dataloader_toy.py" />
         <option value="$PROJECT_DIR$/main_toy.py" />
+        <option value="$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py" />
       </list>
     </option>
   </component>
@@ -898,17 +872,9 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/model/model_toy_BEGAN.py" />
-    <entry file="file://$PROJECT_DIR$/model/model_toy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4140">
-          <caret line="235" column="34" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="376" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model/model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3186">
+        <state relative-caret-position="0">
           <caret line="182" column="12" lean-forward="false" selection-start-line="182" selection-start-column="12" selection-end-line="182" selection-end-column="12" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
@@ -916,21 +882,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/dataloader_toy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="39" column="40" lean-forward="false" selection-start-line="39" selection-start-column="40" selection-end-line="39" selection-end-column="40" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model/model_toy_WGAN_MI.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2970">
           <caret line="243" column="27" lean-forward="false" selection-start-line="243" selection-start-column="27" selection-end-line="243" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -938,16 +893,29 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1854">
           <caret line="121" column="0" lean-forward="false" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/dataloader_toy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="8" column="99" lean-forward="false" selection-start-line="8" selection-start-column="99" selection-end-line="8" selection-end-column="99" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model/model_toy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="532">
+          <caret line="125" column="61" lean-forward="false" selection-start-line="125" selection-start-column="61" selection-end-line="125" selection-end-column="61" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/main_toy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="522">
-          <caret line="29" column="59" lean-forward="false" selection-start-line="29" selection-start-column="59" selection-end-line="29" selection-end-column="59" />
+        <state relative-caret-position="288">
+          <caret line="16" column="59" lean-forward="false" selection-start-line="16" selection-start-column="59" selection-end-line="16" selection-end-column="59" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
@@ -956,8 +924,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model/model_toy_WGAN_multiGAN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="249">
-          <caret line="328" column="48" lean-forward="true" selection-start-line="328" selection-start-column="48" selection-end-line="328" selection-end-column="48" />
+        <state relative-caret-position="195">
+          <caret line="244" column="34" lean-forward="false" selection-start-line="244" selection-start-column="34" selection-end-line="244" selection-end-column="34" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
