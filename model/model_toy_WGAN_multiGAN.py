@@ -48,7 +48,7 @@ class ModuleBlock(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.relu(x)
-        # x = self.res(x)
+        x = self.res(x)
         # x = self.conv2(x)
         # x = self.relu(x)
         return x
@@ -63,6 +63,7 @@ class Encoder(nn.Module):
         self.module4 = ModuleBlock(opt.ngf * 4, opt.ngf * 8)
         self.module5 = ModuleBlock(opt.ngf * 8, opt.ngf * 16)
         self.module6 = ModuleBlock(opt.ngf * 16, opt.ngf * 32)
+        self.conv = nn.Conv2d(opt.ngf * 32, opt.ngf * 32, 3, padding=1)
     def forward(self, x):
         x_1 = self.module1(x)
         x_1 = self.pool(x_1)  # 32x32
@@ -76,43 +77,44 @@ class Encoder(nn.Module):
         x_5 = self.pool(x_5)  # 2x2
         x_ = self.module6(x_5)
         x_ = self.pool(x_)  # 2x2
+        x_ = self.conv(x_)
 
-        return x_, [x_1, x_2, x_3, x_4, x_5]
+        return x_  # , [x_1, x_2, x_3, x_4, x_5]
 
 class Decoder(nn.Module):
     def __init__(self, opt):
         super(Decoder, self).__init__()
         self.unpool = nn.MaxUnpool2d(2, 2)
         self.deconv1 = nn.ConvTranspose2d(opt.ngf * 32, opt.ngf * 16, 2, 2)
-        self.module7 = ModuleBlock(opt.ngf * 32, opt.ngf * 16)
+        self.module7 = ModuleBlock(opt.ngf * 16, opt.ngf * 16)
         self.deconv2 = nn.ConvTranspose2d(opt.ngf * 16, opt.ngf * 8, 2, 2)
-        self.module8 = ModuleBlock(opt.ngf * 16, opt.ngf * 8)
+        self.module8 = ModuleBlock(opt.ngf * 8, opt.ngf * 8)
 
         self.deconv3 = nn.ConvTranspose2d(opt.ngf * 8, opt.ngf * 4, 2, 2)
-        self.module9 = ModuleBlock(opt.ngf * 8, opt.ngf * 4)
+        self.module9 = ModuleBlock(opt.ngf * 4, opt.ngf * 4)
         self.deconv4 = nn.ConvTranspose2d(opt.ngf * 4, opt.ngf * 2, 2, 2)
-        self.module10 = ModuleBlock(opt.ngf * 4, opt.ngf * 2)
+        self.module10 = ModuleBlock(opt.ngf * 2, opt.ngf * 2)
         self.deconv5 = nn.ConvTranspose2d(opt.ngf * 2, opt.ngf, 2, 2)
-        self.module11 = ModuleBlock(opt.ngf * 2, opt.ngf)
+        self.module11 = ModuleBlock(opt.ngf , opt.ngf)
         self.deconv6 = nn.ConvTranspose2d(opt.ngf, opt.ngf, 2, 2)
         self.module12 = ModuleBlock(opt.ngf, 3)
         self.tanh = nn.Tanh()
-    def forward(self, x, x_pack):
+    def forward(self, x):
         x_ = self.deconv1(x)
-        x_ = torch.cat([x_, x_pack[4]], dim=1)
+        # x_ = torch.cat([x_, x_pack[4]], dim=1)
         x_ = self.module7(x_)
         x_ = self.deconv2(x_)
-        x_ = torch.cat([x_, x_pack[3]], dim=1)
+        # x_ = torch.cat([x_, x_pack[3]], dim=1)
         x_ = self.module8(x_)
         x_ = self.deconv3(x_)
-        x_ = torch.cat([x_, x_pack[2]], dim=1)
+        # x_ = torch.cat([x_, x_pack[2]], dim=1)
         x_ = self.module9(x_)
 
         x_ = self.deconv4(x_)
-        x_ = torch.cat([x_, x_pack[1]], dim=1)
+        # x_ = torch.cat([x_, x_pack[1]], dim=1)
         x_ = self.module10(x_)
         x_ = self.deconv5(x_)
-        x_ = torch.cat([x_, x_pack[0]], dim=1)
+        # x_ = torch.cat([x_, x_pack[0]], dim=1)
         x_ = self.module11(x_)
 
         x_ = self.deconv6(x_)
@@ -125,16 +127,19 @@ class GRNNcell(nn.Module):
     def __init__(self, opt):
         super(GRNNcell, self).__init__()
         self.encoder = Encoder(opt)
-        self.fc_h = nn.Linear(opt.ngf * 32 * 2, opt.ngf * 32)
+        self.fc_h = nn.Sequential(
+            nn.Linear(opt.ngf * 32 * 2, opt.ngf * 32), nn.ReLU(),
+            nn.Linear(opt.ngf * 32, opt.ngf * 32)
+        )
         self.decoder = Decoder(opt)
     def forward(self, x, hidden):
-        [out, pack] = self.encoder(x)
+        out = self.encoder(x)
         out = out.squeeze()
         # print self.fc_xh(out).size(), self.fc_hh(hidden).size()
         hidden = torch.cat([out, hidden], dim=1)
         hidden = self.fc_h(hidden)
         hidden_ = hidden.unsqueeze(2).unsqueeze(3)
-        out = self.decoder(hidden_, pack)
+        out = self.decoder(hidden_)
         return out, hidden
 
 class GRNN(nn.Module):
@@ -143,7 +148,10 @@ class GRNN(nn.Module):
         self.opt = opt
         self.grnn_cell = GRNNcell(opt)
         self.train = True
-        self.fc = nn.Linear(100, opt.ngf * 32)
+        self.fc = nn.Sequential(
+            nn.Linear(100, opt.ngf * 16), nn.ReLU(),
+            nn.Linear(opt.ngf * 16, opt.ngf * 32)
+        )
 
     def Train(self):
         self.train = True
@@ -180,7 +188,8 @@ class Discriminator(nn.Module):
             nn.Conv3d(256, 512, (1, 4, 4), 1), nn.ReLU()
         )
         self.fc = nn.Sequential(
-            nn.Linear(512, 1), nn.Sigmoid()
+            nn.Linear(512, 1024), nn.ReLU(),
+            nn.Linear(1024, 1), nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -234,8 +243,8 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
     IDnet = ImgDiscriminator().cuda()
 
     optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
-    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.45, betas=(opt.beta1, 0.999), weight_decay=0.001)
-    optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.15, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.5, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.05, betas=(opt.beta1, 0.999), weight_decay=0.001)
     Dcriterion = nn.BCELoss().cuda()
     fake = 0
     real = 1
@@ -313,10 +322,10 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             slopes = torch.sum(gradients ** 2, 1).sqrt()
             gradient_penalty = (torch.mean(slopes - 1.) ** 2)
 
-            errD = - errD_real_img - errD_real_vid + errD_fake_img + errD_fake_vid + gradient_penalty
+            errD = - errD_real_vid + errD_fake_vid + gradient_penalty
             errD.backward(retain_graph=True)
             optimizerD.step()
-            optimizerID.step()
+            # optimizerID.step()
 
             ###################
             # Train Generator #
@@ -335,8 +344,8 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             D_g_2 = out_.data.mean()
             # label = Variable(torch.FloatTensor(out_.size(0)).fill_(real)).cuda()
             # errG_img = Dcriterion(out_, label)
-            errG_img = -out_.mean()
-            errG = errG_fake_vid + errG_img
+            errG_img = out_.mean()
+            errG = - errG_fake_vid
             errG.backward()
 
             optimizer.step()
