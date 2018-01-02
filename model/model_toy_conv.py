@@ -79,42 +79,42 @@ class Encoder(nn.Module):
         x_ = self.pool(x_)  # 2x2
         x_ = self.conv(x_)
 
-        return x_  # , [x_1, x_2, x_3, x_4, x_5]
+        return x_, [x_1, x_2, x_3, x_4, x_5]
 
 class Decoder(nn.Module):
     def __init__(self, opt):
         super(Decoder, self).__init__()
         self.unpool = nn.MaxUnpool2d(2, 2)
         self.deconv1 = nn.ConvTranspose2d(opt.ngf * 32, opt.ngf * 16, 2, 2)
-        self.module7 = ModuleBlock(opt.ngf * 16, opt.ngf * 16)
+        self.module7 = ModuleBlock(opt.ngf * 32, opt.ngf * 16)
         self.deconv2 = nn.ConvTranspose2d(opt.ngf * 16, opt.ngf * 8, 2, 2)
-        self.module8 = ModuleBlock(opt.ngf * 8, opt.ngf * 8)
+        self.module8 = ModuleBlock(opt.ngf * 16, opt.ngf * 8)
 
         self.deconv3 = nn.ConvTranspose2d(opt.ngf * 8, opt.ngf * 4, 2, 2)
-        self.module9 = ModuleBlock(opt.ngf * 4, opt.ngf * 4)
+        self.module9 = ModuleBlock(opt.ngf * 8, opt.ngf * 4)
         self.deconv4 = nn.ConvTranspose2d(opt.ngf * 4, opt.ngf * 2, 2, 2)
-        self.module10 = ModuleBlock(opt.ngf * 2, opt.ngf * 2)
+        self.module10 = ModuleBlock(opt.ngf * 4, opt.ngf * 2)
         self.deconv5 = nn.ConvTranspose2d(opt.ngf * 2, opt.ngf, 2, 2)
-        self.module11 = ModuleBlock(opt.ngf , opt.ngf)
+        self.module11 = ModuleBlock(opt.ngf * 2, opt.ngf)
         self.deconv6 = nn.ConvTranspose2d(opt.ngf, opt.ngf, 2, 2)
         self.module12 = ModuleBlock(opt.ngf, 3)
         self.tanh = nn.Tanh()
-    def forward(self, x):
+    def forward(self, x, x_pack):
         x_ = self.deconv1(x)
-        # x_ = torch.cat([x_, x_pack[4]], dim=1)
+        x_ = torch.cat([x_, x_pack[4]], dim=1)
         x_ = self.module7(x_)
         x_ = self.deconv2(x_)
-        # x_ = torch.cat([x_, x_pack[3]], dim=1)
+        x_ = torch.cat([x_, x_pack[3]], dim=1)
         x_ = self.module8(x_)
         x_ = self.deconv3(x_)
-        # x_ = torch.cat([x_, x_pack[2]], dim=1)
+        x_ = torch.cat([x_, x_pack[2]], dim=1)
         x_ = self.module9(x_)
 
         x_ = self.deconv4(x_)
-        # x_ = torch.cat([x_, x_pack[1]], dim=1)
+        x_ = torch.cat([x_, x_pack[1]], dim=1)
         x_ = self.module10(x_)
         x_ = self.deconv5(x_)
-        # x_ = torch.cat([x_, x_pack[0]], dim=1)
+        x_ = torch.cat([x_, x_pack[0]], dim=1)
         x_ = self.module11(x_)
 
         x_ = self.deconv6(x_)
@@ -130,13 +130,13 @@ class GRNNcell(nn.Module):
         self.fc_h = nn.Linear(opt.ngf * 32 * 2, opt.ngf * 32)
         self.decoder = Decoder(opt)
     def forward(self, x, hidden):
-        out = self.encoder(x)
+        [out, pack]= self.encoder(x)
         out = out.squeeze()
         # print self.fc_xh(out).size(), self.fc_hh(hidden).size()
         hidden = torch.cat([out, hidden], dim=1)
         hidden = self.fc_h(hidden)
         hidden_ = hidden.unsqueeze(2).unsqueeze(3)
-        out = self.decoder(hidden_)
+        out = self.decoder(hidden_, pack)
         return out, hidden
 
 class GRNN(nn.Module):
@@ -160,7 +160,7 @@ class GRNN(nn.Module):
                 [y, hidden] = self.grnn_cell(x_, hidden)
                 out.append(y)
         else:
-            for _ in range(self.opt.seqlen):
+            for _ in range(self.opt.seqlen - 1):
                 [x, hidden] = self.grnn_cell(x, hidden)
                 out.append(x)
         return out
@@ -186,13 +186,16 @@ class Discriminator(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv3d(3, 32, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),  # 32
             nn.Conv3d(32, 64, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 32
+            nn.Conv3d(64, 64, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),
             nn.Conv3d(64, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 16
+            nn.Conv3d(128, 128, (1, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(),
             nn.Conv3d(128, 256, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 8
             nn.Conv3d(256, 256, (2, 3, 3), 1, padding=(0, 1, 1)), nn.ReLU(), nn.MaxPool3d((1, 2, 2), (1, 2, 2)),  # 4
-            nn.Conv3d(256, 512, (1, 4, 4), 1), nn.ReLU()
+            nn.Conv3d(256, 512, (1, 4, 4), 1)
         )
         self.fc = nn.Sequential(
-            nn.Linear(512, 1), nn.Sigmoid()
+            nn.Linear(512, 1024), nn.ReLU(),
+            nn.Linear(1024, 1), nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -246,7 +249,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
     IDnet = ImgDiscriminator().cuda()
 
     optimizer = optim.Adam(net.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
-    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.3, betas=(opt.beta1, 0.999), weight_decay=0.001)
+    optimizerD = optim.Adam(Dnet.parameters(), lr=opt.lr * 0.1, betas=(opt.beta1, 0.999), weight_decay=0.001)
     optimizerID = optim.Adam(IDnet.parameters(), lr=opt.lr * 0.3, betas=(opt.beta1, 0.999), weight_decay=0.001)
     Dcriterion = nn.BCELoss().cuda()
     fake = 0
@@ -254,7 +257,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
 
     for epoch in range(opt.niter):
         net.Train()
-        for i, image in enumerate(train_dataloader):
+        for i, (image, seg) in enumerate(train_dataloader):
             #######################
             # Train Discriminator #
             #######################
@@ -263,20 +266,21 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             # IDnet.zero_grad()
             input_real = [seq.unsqueeze(2) for seq in image]
             input_real = Variable(torch.cat(input_real, dim=2).cuda())
+            seg_real = [Variable(segment.cuda()) + 0.8 for segment in seg]
             label = Variable(torch.FloatTensor(input_real.size(0)).fill_(real)).cuda()
             out = Dnet(input_real)
-            # errD_real_vid = Dcriterion(out, label)
-            # errD_real_vid.backward(retain_graph=True)
-            errD_real_vid = out.mean()
+            errD_real_vid = Dcriterion(out, label)
+            errD_real_vid.backward(retain_graph=True)
+            # errD_real_vid = out.mean()
 
             # Real_image
-            input_real = [torch.cat([pre_img, post_img], dim=1) for pre_img, post_img in zip(image[:-1], image[1:])]
-            input_real = Variable(torch.cat(input_real, dim=0)).cuda()
-            out = IDnet(input_real)
+            # input_real = [torch.cat([pre_img, post_img], dim=1) for pre_img, post_img in zip(image[:-1], image[1:])]
+            # input_real = Variable(torch.cat(input_real, dim=0)).cuda()
+            # out = IDnet(input_real)
             # label = Variable(torch.FloatTensor(out.size(0)).fill_(real)).cuda()
             # errD_real_img = Dcriterion(out, label)
             # errD_real_img.backward(retain_graph=True)
-            errD_real_img = out.mean()
+            # errD_real_img = out.mean()
 
             D_x = out.data.mean()
 
@@ -285,6 +289,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             init_hidden = torch.FloatTensor(image[0].size(0), 100)
             init_hidden = Variable(init_hidden.random_(0, 1)).cuda()
             out = net(input_g[:-1], init_hidden)
+            # out_seg = [out_img * segm.expand_as(out_img) for out_img, segm in zip(out, seg_real[1:])]
 
             input = [input_g[0].unsqueeze(2)]
             for item in out:
@@ -342,7 +347,10 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
             if i % 125 == 0:
                 save_img_gt = [seq[0, :, :, :].unsqueeze(0) for seq in input_g]
                 save_img_gt = torch.cat(save_img_gt, dim=0)
-                save_img_out = [seq.squeeze()[0, :, :, :].unsqueeze(0) for seq in input]
+                input = [input_g[0]]
+                for item in out:
+                    input.append(item)
+                save_img_out = [seq[0, :, :, :].unsqueeze(0) for seq in input]
                 save_img_out = torch.cat(save_img_out, dim=0)
 
                 folder_path = '%s/toy_train_samples/%d' % (opt.outf, epoch)
@@ -353,7 +361,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
                 vutils.save_image(save_img_out.data,
                                   '%s/toy_train_samples/%d/%d_generated_samples.png' % (opt.outf, epoch, i))
         net.Eval()
-        for i, image in enumerate(test_dataloader):
+        for i, (image, _) in enumerate(test_dataloader):
             input = [Variable(item.cuda()) for item in image]
             init_hidden = torch.FloatTensor(image[0].size(0), 100)
             init_hidden = Variable(init_hidden.random_(0, 1)).cuda()

@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 from PIL import Image, ImageDraw
 import numpy as np
 import os
-os.environ["CDF_LIB"] = "/home/jisu/Downloads/cdf36_4-dist/src/lib"
+os.environ["CDF_LIB"] = "/home/user/Downloads/cdf36_4-dist/src/lib"
 from spacepy import pycdf
 
 def make_4digits(numstr):
