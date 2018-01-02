@@ -74,9 +74,9 @@ class Encoder(nn.Module):
         x_4 = self.module4(x_3)
         x_4 = self.pool(x_4)  # 4x4
         x_5 = self.module5(x_4)
-        x_5 = self.pool(x_5)  # 2x2
+        # x_5 = self.pool(x_5)  # 2x2
         x_ = self.module6(x_5)
-        x_ = self.pool(x_)  # 2x2
+        # x_ = self.pool(x_)  # 2x2
         x_ = self.conv(x_)
 
         return x_, [x_1, x_2, x_3, x_4, x_5]
@@ -127,7 +127,7 @@ class GRNNcell(nn.Module):
     def __init__(self, opt):
         super(GRNNcell, self).__init__()
         self.encoder = Encoder(opt)
-        self.fc_h = nn.Linear(opt.ngf * 32 * 2, opt.ngf * 32)
+        self.conv_h = nn.Conv2d(opt.ngf * 32 * 2, opt.ngf * 32, 3, 1, padding=1)
         self.decoder = Decoder(opt)
     def forward(self, x, hidden):
         [out, pack]= self.encoder(x)
@@ -145,7 +145,11 @@ class GRNN(nn.Module):
         self.opt = opt
         self.grnn_cell = GRNNcell(opt)
         self.train = True
-        self.fc = nn.Linear(100, opt.ngf * 32)
+        # self.fc = nn.Linear(100, opt.ngf * 32)
+        self.deconv = nn.Sequential(
+            nn.ConvTranspose2d(100, opt.ngf * 16, 2, 2), nn.ReLU(),
+            nn.ConvTranspose2d(opt.ngf * 16, opt.ngf * 32, 2, 2)
+        )
 
     def Train(self):
         self.train = True
@@ -154,7 +158,7 @@ class GRNN(nn.Module):
 
     def forward(self, x, hidden):
         out = []
-        hidden = self.fc(hidden)
+        hidden = self.deconv(hidden)
         if self.train == True:
             for x_ in x:
                 [y, hidden] = self.grnn_cell(x_, hidden)
@@ -286,7 +290,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
 
             # Fake_sequence
             input_g = [Variable(item.cuda()) for item in image]
-            init_hidden = torch.FloatTensor(image[0].size(0), 100)
+            init_hidden = torch.FloatTensor(image[0].size(0), 100, 1, 1)
             init_hidden = Variable(init_hidden.random_(0, 1)).cuda()
             out = net(input_g[:-1], init_hidden)
             # out_seg = [out_img * segm.expand_as(out_img) for out_img, segm in zip(out, seg_real[1:])]
@@ -363,7 +367,7 @@ def GRNN_trainer(opt, train_dataloader, test_dataloader):
         net.Eval()
         for i, (image, _) in enumerate(test_dataloader):
             input = [Variable(item.cuda()) for item in image]
-            init_hidden = torch.FloatTensor(image[0].size(0), 100)
+            init_hidden = torch.FloatTensor(image[0].size(0), 100, 1, 1)
             init_hidden = Variable(init_hidden.random_(0, 1)).cuda()
             out = net(input[0], init_hidden)
             out_video = [input[0]]
